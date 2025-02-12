@@ -19,6 +19,8 @@ const ConsigneForm = ({ user }) => {
           date: serverTimestamp(), // Firestore Timestamp (correct format)
           createdBy: user.email, // Store user's email for tracking
           userId: user.uid, // Store user ID in case you need it later
+          status: 'To Do', // Automatically set status to "To Do"
+          comment: '', // Empty comment by default
         });
         setConsigne(''); // Clear input field after submission
       } catch (err) {
