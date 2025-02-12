@@ -1,28 +1,34 @@
 // src/components/ConsigneList.js
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 
-const ConsigneList = ({ user }) => {
+const ConsigneList = () => {
   const [consignes, setConsignes] = useState([]);
 
   useEffect(() => {
-    // Create a query to fetch consignes for the current user
-    const consignesRef = collection(db, 'consignes');
-    const q = query(consignesRef, where('userId', '==', user.uid));
+    const q = query(collection(db, 'consignes'), orderBy('date', 'desc'));
 
-    // Listen for changes in real-time
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const consignesList = [];
-      querySnapshot.forEach((doc) => {
-        consignesList.push({ ...doc.data(), id: doc.id });
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedConsignes = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          text: data.text,
+          createdBy: data.createdBy || "Utilisateur inconnu",
+          /* date: data.date && data.date.seconds
+            ? new Date(data.date.seconds * 1000)  // Convert Firestore timestamp
+            : null, // Handle missing timestamps */
+          date: data.date && typeof data.date.toDate === 'function'
+            ? data.date.toDate()  // Use Firestore's built-in toDate() method
+            : null, // Handle missing timestamps
+        };
       });
-      setConsignes(consignesList);
+      setConsignes(fetchedConsignes);
     });
 
-    // Clean up the listener when the component unmounts
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   return (
     <div>
@@ -30,8 +36,13 @@ const ConsigneList = ({ user }) => {
       <ul>
         {consignes.map((consigne) => (
           <li key={consigne.id}>
-            <p>{consigne.consigne}</p>
-            <small>{consigne.date}</small>
+            <strong>{consigne.text}</strong>
+            <br />
+            <em>Ajouté par: {consigne.createdBy}</em>
+            <br />
+            {consigne.date
+              ? consigne.date.toLocaleString()  // Format date properly
+              : "Date inconnue"}
           </li>
         ))}
       </ul>

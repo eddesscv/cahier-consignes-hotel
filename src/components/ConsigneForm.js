@@ -13,17 +13,14 @@ const ConsigneForm = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (consigne.trim()) {
-      // Add consigne to Firestore with current user ID and date
-      const date = new Date().toLocaleString();
-      const consigneData = { consigne, date, userId: user.uid };
-
       try {
         await addDoc(collection(db, 'consignes'), {
           text: consigne,
-          date: serverTimestamp(), // Timestamp for sorting
-          createdBy: user.email, // Store user's email
+          date: serverTimestamp(), // Firestore Timestamp (correct format)
+          createdBy: user.email, // Store user's email for tracking
+          userId: user.uid, // Store user ID in case you need it later
         });
-        setConsigne(''); // Clear the input field after submission
+        setConsigne(''); // Clear input field after submission
       } catch (err) {
         console.error('Error adding consigne: ', err);
       }
